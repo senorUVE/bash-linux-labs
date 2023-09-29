@@ -1,0 +1,32 @@
+Функция dup2() в Linux используется для создания дубликата открытого файла с помощью файловых дескрипторов. Когда файл открывается в Linux, ядро выделяет ему файловый дескриптор, через который приложение может обращаться к данному файлу. Функция dup2() имитирует открытие файла, но вместо того, чтобы выделять новый файловый дескриптор, она присваивает старому уже существующему файловому дескриптору новое значение.
+
+Когда вызывается функция dup2(fd, newfd), она закрывает сначала файл, на который ссылается newfd, и копирует файловый дескриптор fd в новый файловый дескриптор newfd. Если файловый дескриптор fd не был открыт, то функция dup2(fd, newfd) возвращает ошибку. В результате, как только функция завершается, новый файловый дескриптор newfd указывает на тот же самый открытый файл, что и fd, что позволяет приложению работать с файлом через несколько различных дескрипторов. 
+
+Таким образом, функция dup2() позволяет процессу создать новый файловый дескриптор, связанный с тем же открытым файлом, что и уже существующий дескриптор. Это может быть полезно, например, при перенаправлении ввода/вывода в файл или канал, запуске программ в фоне, или создании дочернего процесса с общими открытыми файлами.
+
+The first is to fork(), which creates a brand new process containing a duplicate (mostly) of the current program, including its state. There are a few differences between the two processes which allow them to figure out which is the parent and which is the child.
+
+The second is to exec(), which replaces the program in the current process with a brand new program.
+e fork() call makes a near duplicate of the current process, identical in almost every way (not everything is copied over, for example, resource limits in some implementations, but the idea is to create as close a copy as possible). Only one process calls fork() but two processes return from that call - sounds bizarre but it's really quite elegant
+
+The new process (called the child) gets a different process ID (PID) and has the PID of the old process (the parent) as its parent PID (PPID).
+
+Because the two processes are now running exactly the same code, they need to be able to tell which is which - the return code of fork() provides this information - the child gets 0, the parent gets the PID of the child (if the fork() fails, no child is created and the parent gets an error code).
+
+That way, the parent knows the PID of the child and can communicate with it, kill it, wait for it and so on (the child can always find its parent process with a call to getppid()).
+
+The exec() call replaces the entire current contents of the process with a new program. It loads the program into the current process space and runs it from the entry point.
+
+The exec family of functions make your process execute a different program, replacing the old program it was running. I.e., if you call
+
+execl("/bin/ls", "ls", NULL);
+then the ls program is executed with the process id, current working dir and user/group (access rights) of the process that called execl. Afterwards, the original program is not running anymore.
+
+To start a new process, the fork system call is used. To execute a program without replacing the original, you need to fork, then exec.
+execl() call does not create a new process.
+It replaces the image of the current process.Вытаскиваются данные из памяти, вставляются в новые
+It takes two arguments:
+
+The path of the file to execute.
+Pointers to NULL-terminated character strings
+It loads the program into the current process space and runs it from the entry point.
